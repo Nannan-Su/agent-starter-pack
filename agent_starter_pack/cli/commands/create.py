@@ -145,6 +145,12 @@ def shared_template_options(f: Callable) -> Callable:
         help="Name of the agent directory (overrides template default)",
     )(f)
     f = click.option(
+        "--bq-analytics",
+        is_flag=True,
+        help="Include BigQuery Agent Analytics Plugin for observability",
+        default=False,
+    )(f)
+    f = click.option(
         "--base-template",
         "-bt",
         help="Base template to use (overrides template default, only for remote templates)",
@@ -311,6 +317,7 @@ def create(
     locked: bool = False,
     cli_overrides: dict | None = None,
     google_api_key: str | None = None,
+    bq_analytics: bool = False,
 ) -> None:
     """Create GCP-based AI agent projects from templates."""
     try:
@@ -944,6 +951,7 @@ def create(
                 remote_spec=remote_spec,
                 google_api_key=google_api_key,
                 google_cloud_project=creds_info.get("project"),
+                bq_analytics=bq_analytics,
             )
 
             # Replace region in all files if a different region was specified

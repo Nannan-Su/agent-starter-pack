@@ -233,6 +233,17 @@ resource "google_cloud_run_v2_service" "app" {
         value = google_storage_bucket.logs_data_bucket[each.value].name
       }
 
+{%- if cookiecutter.bq_analytics %}
+      env {
+        name  = "BQ_ANALYTICS_GCS_BUCKET"
+        value = google_storage_bucket.logs_data_bucket[each.value].name
+      }
+      env {
+        name  = "BQ_ANALYTICS_DATASET_ID"
+        value = "${replace(var.project_name, "-", "_")}_analytics"
+      }
+{%- endif %}
+
       env {
         name  = "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
         value = "NO_CONTENT"

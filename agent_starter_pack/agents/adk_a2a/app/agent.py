@@ -65,6 +65,41 @@ def get_current_time(query: str) -> str:
     return f"The current time for query {query} is {now.strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
 
 
+_plugins = []
+{%- if cookiecutter.bq_analytics %}
+from google.adk.plugins.bigquery_agent_analytics import (
+    BigQueryAgentAnalyticsPlugin,
+    BigQueryLoggerConfig,
+)
+from google.cloud import bigquery
+
+# Initialize BigQuery Analytics if configured
+_project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+_dataset_id = os.environ.get("BQ_ANALYTICS_DATASET_ID", "adk_agent_analytics")
+_location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+
+if _project_id:
+    try:
+        # Best effort auto-provisioning for local development
+        bq = bigquery.Client(project=_project_id)
+        bq.create_dataset(f"{_project_id}.{_dataset_id}", exists_ok=True)
+
+        _plugins.append(
+            BigQueryAgentAnalyticsPlugin(
+                project_id=_project_id,
+                dataset_id=_dataset_id,
+                location=_location,
+                config=BigQueryLoggerConfig(
+                    gcs_bucket_name=os.environ.get("BQ_ANALYTICS_GCS_BUCKET"),
+                    connection_id=os.environ.get("BQ_ANALYTICS_CONNECTION_ID"),
+                ),
+            )
+        )
+    except Exception:
+        pass  # Graceful fallback if BQ is not available
+{%- endif %}
+
+
 root_agent = Agent(
     name="root_agent",
     model=Gemini(
@@ -74,6 +109,7 @@ root_agent = Agent(
     description="An agent that can provide information about the weather and time.",
     instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
     tools=[get_weather, get_current_time],
+    plugins=_plugins,
 )
 
 app = App(root_agent=root_agent, name="{{cookiecutter.agent_directory}}")
