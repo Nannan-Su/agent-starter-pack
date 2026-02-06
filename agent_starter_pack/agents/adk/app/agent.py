@@ -68,6 +68,10 @@ def get_current_time(query: str) -> str:
 _plugins = []
 {%- if cookiecutter.bq_analytics %}
 import logging
+{%- if cookiecutter.use_google_api_key %}
+import os
+
+{%- endif %}
 from google.adk.plugins.bigquery_agent_analytics_plugin import (
     BigQueryAgentAnalyticsPlugin,
     BigQueryLoggerConfig,
